@@ -1,0 +1,38 @@
+[project]
+name = "atools"
+description = "Library for atomistic simulations"
+readme = "README.md"
+
+requires-python = ">=3.10,<3.12"
+license = { text = "MIT" }
+classifiers = ["Programming Language :: Python :: 3"]
+dependencies = [
+  "numpy>=1.23.2",
+  "ase>3.21.1",
+  "ase-extension",
+  "cclib"
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = ["flake8", "black", "isort", "jupyter", "pytest", "ruff"]
+
+
+[tool.setuptools.packages.find]
+include = ["atools"]
+exclude = ["dev"]
+
+[tool.setuptools.dynamic]
+version = { attr = "atools.__version__" }
+
+[tool.black]
+line-length = 120
+
+[tool.ruff]
+line-length = 120
+select = ["W", "F", "E", "B", "I"]
+
+
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
