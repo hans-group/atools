@@ -92,7 +92,7 @@ def read_orca_geom(out_txt: str):
     return atoms_list
 
 
-def read_orca_singlepoint(calc_dir, calc_name: str = "orca"):
+def read_orca_singlepoint(calc_dir, calc_name: str = "orca", atomref_energies: dict[str, float] = None):
     outfile = Path(calc_dir) / f"{calc_name}.out"
     hessfile = Path(calc_dir) / f"{calc_name}.hess"
     out_txt = outfile.read_text()
@@ -100,6 +100,9 @@ def read_orca_singlepoint(calc_dir, calc_name: str = "orca"):
     if isinstance(atoms, list):
         raise RuntimeError("It seems that this is an optimization calculation.")
     energy = read_orca_energy(out_txt)
+    if atomref_energies is not None:
+        for s in atoms.get_chemical_symbols():
+            energy -= atomref_energies[s]  # eV
     try:
         forces = read_orca_force(out_txt)
     except ValueError:
@@ -112,7 +115,7 @@ def read_orca_singlepoint(calc_dir, calc_name: str = "orca"):
     return atoms
 
 
-def read_orca_opt(calc_dir, calc_name: str = "orca"):
+def read_orca_opt(calc_dir, calc_name: str = "orca", atomref_energies: dict[str, float] = None):
     re_start = r"GEOMETRY OPTIMIZATION CYCLE"
     re_end = r"Geometry convergence"
 
@@ -126,6 +129,9 @@ def read_orca_opt(calc_dir, calc_name: str = "orca"):
     for chunk in chunks:
         atoms = read_orca_geom(chunk)
         energy = read_orca_energy(chunk)
+        if atomref_energies is not None:
+            for s in atoms.get_chemical_symbols():
+                energy -= atomref_energies[s]  # eV
         forces = read_orca_force(chunk)
         calc = SinglePointCalculator(atoms, energy=energy, forces=forces)
         atoms.set_calculator(calc)
@@ -145,7 +151,7 @@ def read_orca_opt(calc_dir, calc_name: str = "orca"):
     return atoms_list
 
 
-def read_orca_xyz(xyzfile, subs_key=r"E\s+"):
+def read_orca_xyz(xyzfile, subs_key=r"E\s+", atomref_energies: dict[str, float] = None):
     xyz_txt = Path(xyzfile).read_text()
     re_energy = r"({})([-+]?\d+.?\d+)".format(subs_key)
     # substitute E\s+ with energy=
@@ -156,6 +162,9 @@ def read_orca_xyz(xyzfile, subs_key=r"E\s+"):
         images = [images]
     for i in range(len(images)):
         energy = images[i].get_potential_energy() * units.Hartree
+        if atomref_energies is not None:
+            for s in images[i].get_chemical_symbols():
+                energy -= atomref_energies[s]
         calc = SinglePointCalculator(images[i], energy=energy)
         images[i].set_calculator(calc)
     return images
@@ -184,9 +193,9 @@ def read_orca_neb(calc_dir, calc_name: str = "orca"):
 
 def read_orca(calc_dir, calc_name: str = "orca", calc_type: str = "singlepoint", **kwargs):
     if calc_type == "singlepoint":
-        return read_orca_singlepoint(calc_dir, calc_name)
+        return read_orca_singlepoint(calc_dir, calc_name, **kwargs)
     elif calc_type == "opt":
-        return read_orca_opt(calc_dir, calc_name)
+        return read_orca_opt(calc_dir, calc_name, **kwargs)
     elif calc_type == "md":
         return read_orca_md(calc_dir, calc_name, **kwargs)
     elif calc_type == "neb":
