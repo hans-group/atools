@@ -14,13 +14,13 @@ def build_cmd(xtb_cmd, parameters):
     args = [xtb_cmd, "input.xyz"]
 
     # Charge and spin
-    args.append(f"--chrg {parameters.charge}")
-    if (spin := parameters.spin) != 0:
+    args.append(f"--chrg {parameters['charge']}")
+    if (spin := parameters['spin']) != 0:
         args.append(f"--uhf {spin}")
         args.append("--spinpol --tblite")
 
     # Solvent
-    if (solvent := parameters.solvent) is not None:
+    if (solvent := parameters['solvent']) is not None:
         args.append(f"--gbsa {solvent.lower()}")
 
     args.append("--grad")
@@ -64,14 +64,15 @@ class XTB(FileIOCalculator):
         atoms=None,
         **kwargs,
     ):
+        xtb_cmd = os.environ.get("ASE_XTB_COMMAND", "xtb -T 32")
         super().__init__(
             restart,
             ignore_bad_restart_file,
             label,
             atoms,
+            command=build_cmd(xtb_cmd, self.default_parameters),
             **kwargs,
         )
-        xtb_cmd = os.environ.get("ASE_XTB_COMMAND", "xtb")
         self.command = build_cmd(xtb_cmd, self.parameters)
         if is_debug():
             print(self.command)
