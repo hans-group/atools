@@ -3,11 +3,12 @@ name = "atools"
 description = "Library for atomistic simulations"
 readme = "README.md"
 
-requires-python = ">=3.10,<3.12"
+requires-python = ">=3.10,<3.13"
 license = { text = "MIT" }
 classifiers = ["Programming Language :: Python :: 3"]
 dependencies = [
   "numpy>=1.23.2",
+  "matscipy",
   "ase>3.21.1",
   "ase-extension",
   "cclib",
