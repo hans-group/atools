@@ -127,7 +127,11 @@ def read_orca_opt(calc_dir, calc_name: str = "orca", atomref_energies: dict[str,
     chunks = find_all_between(text, re_start, re_end)
     atoms_list = []
     for chunk in chunks:
-        atoms = read_orca_geom(chunk)
+        try:
+            atoms = read_orca_geom(chunk)
+        except ValueError:
+            warnings.warn("No geometry found.", stacklevel=1)
+            continue
         energy = read_orca_energy(chunk)
         if atomref_energies is not None:
             for s in atoms.get_chemical_symbols():
@@ -141,7 +145,11 @@ def read_orca_opt(calc_dir, calc_name: str = "orca", atomref_energies: dict[str,
     if stationary_eval_start == -1:
         warnings.warn("Geometry optimization did not converge.", stacklevel=1)
     text = text[stationary_eval_start:]
-    atoms = read_orca_geom(text)
+    try:
+        atoms = read_orca_geom(text)
+    except ValueError:
+        warnings.warn("No geometry found.", stacklevel=1)
+        return atoms_list
     energy = read_orca_energy(text)
     calc = SinglePointCalculator(atoms, energy=energy, forces=None)
     atoms.set_calculator(calc)
