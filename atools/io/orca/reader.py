@@ -104,7 +104,7 @@ def read_orca_singlepoint(calc_dir, calc_name: str = "orca", atomref_energies: d
         for s in atoms.get_chemical_symbols():
             energy -= atomref_energies[s]  # eV
     try:
-        forces = read_orca_force(out_txt)
+        forces = read_orca_force(out_txt)[:len(atoms)]
     except ValueError:
         forces = None
     calc = SinglePointCalculator(atoms, energy=energy, forces=forces)
