@@ -32,7 +32,7 @@ line-length = 120
 
 [tool.ruff]
 line-length = 120
-select = ["W", "F", "E", "B", "I"]
+lint.select = ["W", "F", "E", "B", "I"]
 
 
 [build-system]
