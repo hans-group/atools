@@ -18,6 +18,14 @@ CutoffDict = Dict[Tuple[str, str], float]
 
 @functools.cache
 def _default_covalent_cutoffs(tol: float = 0.2) -> CutoffDict:
+    """Default covalent bond cutoffs for all pairs of elements.
+    Args:
+        tol (float): Tolerance factor to increase the cutoff radius.
+            Default is 0.2.
+
+    Returns:
+        Dict[Tuple[str, str], float]: Dictionary of cutoff radii for all pairs of elements.
+    """
     cutoffs = {}
     for s1, s2 in itertools.combinations_with_replacement(chemical_symbols, 2):
         z1, z2 = atomic_numbers[s1], atomic_numbers[s2]
@@ -30,6 +38,16 @@ def _default_covalent_cutoffs(tol: float = 0.2) -> CutoffDict:
 
 @dataclass(frozen=True)
 class NeighborList:
+    """Dataclass to store neighbor list information.
+    Args:
+        N (int): Number of atoms.
+        i (np.ndarray): Indices of atom i in the pair.
+        j (np.ndarray): Indices of atom j in the pair.
+        d (np.ndarray): Distance between atoms i and j.
+        D (np.ndarray): Displacement vector from atom i to atom j.
+        S (np.ndarray): Displacement vector from atom i to atom j in the supercell.
+    """
+
     N: int  # Number of atoms
     i: np.ndarray  # (n_pairs,)
     j: np.ndarray  # (n_pairs,)
@@ -39,6 +57,16 @@ class NeighborList:
 
     @classmethod
     def from_atoms(cls, atoms: Atoms, cutoff: float | CutoffDict) -> Self:
+        """Create a neighbor list from an Atoms object.
+        Args:
+            atoms (Atoms): Atoms object.
+            cutoff (float | Dict[Tuple[str, str], float]): Cutoff radius for neighbors.
+                If a float, it is used for all pairs of elements.
+                If a dictionary, it is used for specific pairs of elements.
+
+        Returns:
+            NeighborList: Neighbor list object.
+        """
         if np.linalg.det(atoms.get_cell().array) < 1e-8:
             centroid = atoms.get_positions().mean(axis=0)
             radius = np.linalg.norm(atoms.get_positions() - centroid, axis=1).max()
@@ -342,7 +370,16 @@ class MolecularStructure:
         self._atoms.set_positions(positions)
 
 
-def get_local_cluster(structure: MolecularStructure, idx: int, cutoff: float = 5.0):
+def get_local_cluster(structure: MolecularStructure, idx: int, cutoff: float = 5.0) -> Atoms:
+    """Get a local cluster around an atom.
+    Args:
+        structure (MolecularStructure): Molecular structure object.
+        idx (int): Index of the central atom.
+        cutoff (float): Cutoff radius for the cluster. Default is 5.0 Å.
+
+    Returns:
+        Atoms: Local cluster around the central atom.
+    """
     atoms = structure._atoms.copy()
     nbrs_i, nbrs_j, nbrs_S = neighbour_list("ijS", atoms, cutoff)
     if atoms.pbc.any():
